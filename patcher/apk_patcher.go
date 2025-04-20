@@ -61,7 +61,8 @@ func ApkPatcher() {
 		FileName := apkName[:len(apkName)-len(fileExt)]
 
 		// 反编译 apk
-		cmd := exec.Command("apktool", "-r", "-f", "d", apkPath)
+		apkUnzipDir := filepath.Join(appDir, tempDir, FileName)
+		cmd := exec.Command("apktool", "-r", "-f", "-o", apkUnzipDir, "d", apkPath)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			panic(err)
@@ -81,7 +82,8 @@ func ApkPatcher() {
 		}
 
 		// 重新打包 apk
-		cmd = exec.Command("apktool", "b", FileName)
+		distFile := filepath.Join(appDir, tempDir, "dist", FileName+fileExt)
+		cmd = exec.Command("apktool", "b", apkUnzipDir, "-o", distFile)
 		out, err = cmd.CombinedOutput()
 		if err != nil {
 			panic(err)
@@ -89,7 +91,6 @@ func ApkPatcher() {
 		fmt.Println(string(out))
 
 		// zipalign 对齐
-		distFile := FileName + "/dist/" + FileName + fileExt
 		cmd = exec.Command("zipalign", "-f", "-v", "4", distFile, "aligned.apk")
 		out, err = cmd.CombinedOutput()
 		if err != nil {
